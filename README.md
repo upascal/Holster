@@ -8,11 +8,16 @@ A lightweight macOS menu bar app that lets you instantly toggle any application 
 
 ## Quick Download
 
+## Quick Download
+
 <p align="center">
-  <a href="https://github.com/upascal/Holster/releases/download/v1.0.0/Holster.dmg" style="background-color: #04AA6D; border: none; color: white; padding: 20px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 10px;">
-    <img src="Assets/download-icon.svg" alt="Download Holster" height="24" style="vertical-align: middle; filter: brightness(0) invert(1);"/> Download (315 KB)
+  <a href="https://github.com/upascal/Holster/releases/download/v1.0.0/Holster.dmg">
+    <img src="Assets/download-button.svg" width="220" alt="Download Holster">
   </a>
 </p>
+
+
+
 
 ## What It Does
 
