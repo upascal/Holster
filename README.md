@@ -19,7 +19,7 @@ A lightweight macOS menu bar app that lets you instantly toggle any application 
 
 ## What It Does
 
-Holster sits quietly in your menu bar displaying the icon of your chosen app. One click shows or hides that app — perfect for apps you frequently toggle like Claude, Spotify, Messages, Slack, or even Adobe tools.
+Holster sits quietly in your menu bar displaying the icon of your chosen app. One click shows or hides that app — perfect for apps you frequently toggle like Claude, Spotify, Messages, Slack, or Adobe tools.
 
 **Think of it as a quick-draw holster for your favorite app.**
 
