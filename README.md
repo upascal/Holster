@@ -40,6 +40,8 @@ Holster sits quietly in your menu bar displaying the icon of your chosen app. On
 <p align="center" style="margin-top: 0px; margin-bottom: 40px;">
   <em>Holster lives in the menu bar (circled in red)</em>
 </p>
+<br>
+<br>
 
 <p align="center" style="margin-bottom: 0px;">
   <img src="Assets/settings-empty.png" alt="Holster Settings empty" width="400"/>
@@ -48,6 +50,8 @@ Holster sits quietly in your menu bar displaying the icon of your chosen app. On
 <p align="center" style="margin-top: 0px; margin-bottom: 40px;">
   <em>Settings panel with no app selected</em>
 </p>
+<br>
+<br>
 
 <p align="center" style="margin-bottom: 0px;">
   <img src="Assets/settings-configured.png" alt="Holster Settings with Claude selected" width="400"/>
@@ -56,6 +60,8 @@ Holster sits quietly in your menu bar displaying the icon of your chosen app. On
 <p align="center" style="margin-top: 0px; margin-bottom: 40px;">
   <em>Settings panel with Claude as the holstered app — menu bar shows the Claude icon</em>
 </p>
+<br>
+<br>
 
 <p align="center" style="margin-bottom: 0px;">
   <img src="Assets/holster-in-action.gif" alt="Holster in action" width="400"/>
