@@ -2,6 +2,7 @@ import SwiftUI
 import AppKit
 import CoreGraphics
 import UniformTypeIdentifiers
+import ServiceManagement
 
 @main
 struct HolsterApp: App {
@@ -20,29 +21,33 @@ struct SettingsView: View {
     @State private var appIcon: NSImage = AppSettings.shared.getAppIcon(size: NSSize(width: 32, height: 32))
     @State private var statusMessage: String = ""
     @State private var isSuccess: Bool = true
+    @State private var launchAtLogin: Bool = SMAppService.mainApp.status == .enabled
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             GroupBox("About") {
-                VStack(alignment: .leading, spacing: 8) {
+                HStack {
                     Text("Holster")
                         .font(.headline)
-                    Text("A menu bar app to quickly toggle any application.")
+                    Spacer()
+                    Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0")")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                Text("A menu bar app to quickly toggle any application.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
-            
+
             GroupBox("Target Application") {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 10) {
                     if settings.hasTargetApp {
-                        // App is configured
                         HStack(spacing: 12) {
                             Image(nsImage: appIcon)
                                 .resizable()
                                 .frame(width: 32, height: 32)
-                            
+
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(settings.targetAppName)
                                     .font(.headline)
@@ -52,31 +57,30 @@ struct SettingsView: View {
                                     .lineLimit(1)
                                     .truncationMode(.middle)
                             }
-                            
+
                             Spacer()
                         }
                     } else {
-                        // Empty state
                         HStack(spacing: 12) {
-                            Image(nsImage: appIcon)
-                                .resizable()
+                            Image(systemName: "app.dashed")
+                                .font(.system(size: 24))
                                 .frame(width: 32, height: 32)
-                                .opacity(0.5)
-                            
+                                .foregroundColor(.secondary)
+
                             Text("No app selected")
                                 .font(.headline)
                                 .foregroundColor(.secondary)
-                            
+
                             Spacer()
                         }
                     }
-                    
+
                     HStack(spacing: 8) {
                         Button(settings.hasTargetApp ? "Change App..." : "Choose App...") {
                             chooseApplication()
                         }
                         .buttonStyle(.borderedProminent)
-                        
+
                         if settings.hasTargetApp {
                             Button("Clear") {
                                 settings.clearTargetApp()
@@ -87,8 +91,7 @@ struct SettingsView: View {
                             .foregroundColor(.secondary)
                         }
                     }
-                    
-                    // Status message
+
                     if !statusMessage.isEmpty {
                         Text(statusMessage)
                             .font(.caption)
@@ -97,27 +100,47 @@ struct SettingsView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            
+
             if settings.hasTargetApp {
                 GroupBox("Usage") {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 6) {
                             Image(systemName: "cursorarrow.click")
+                                .frame(width: 16)
                             Text("Left-click: Toggle \(settings.targetAppName) on/off")
                         }
-                        HStack {
+                        HStack(spacing: 6) {
                             Image(systemName: "cursorarrow.click.2")
+                                .frame(width: 16)
                             Text("Right-click: Show menu")
                         }
                     }
+                    .font(.callout)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-            
+
+            GroupBox {
+                Toggle("Launch at Login", isOn: $launchAtLogin)
+                    .onChange(of: launchAtLogin) { _, newValue in
+                        do {
+                            if newValue {
+                                try SMAppService.mainApp.register()
+                            } else {
+                                try SMAppService.mainApp.unregister()
+                            }
+                        } catch {
+                            print("[Holster] Launch at login error: \(error)")
+                            launchAtLogin = !newValue // revert on failure
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
             Spacer()
         }
         .padding()
-        .frame(width: 350, height: settings.hasTargetApp ? 320 : 240)
+        .frame(width: 350, height: settings.hasTargetApp ? 380 : 280)
         .onReceive(NotificationCenter.default.publisher(for: .targetAppChanged)) { _ in
             updateIcon()
         }
@@ -171,7 +194,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             object: nil
         )
     }
-    
+
     private func setupStatusButton() {
         if let button = statusItem?.button {
             let icon = settings.getAppIcon()
@@ -228,8 +251,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             menu.addItem(NSMenuItem.separator())
         }
         
-        // Choose App (instead of Settings)
-        let chooseAppItem = NSMenuItem(title: "Choose App...", action: #selector(openSettings), keyEquivalent: ",")
+        // Settings
+        let chooseAppItem = NSMenuItem(title: "Settings...", action: #selector(openSettings), keyEquivalent: ",")
         chooseAppItem.target = self
         menu.addItem(chooseAppItem)
         
@@ -343,17 +366,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // - Otherwise open/show (NSWorkspace.open handles everything)
         if app.isActive && !app.isHidden && appHasVisibleWindows() {
             // App is frontmost with visible windows - hide it
+            // Note: direct app.hide() fails because clicking the menu bar icon
+            // transfers focus to Holster before this runs. Instead, ensure Holster
+            // is frontmost then hide the target app after a brief delay.
             print("[Holster] Hiding app...")
-            let success = app.hide()
-            print("[Holster] Hide result: \(success)")
-            
-            // Some apps (like Adobe) need a moment - if hide failed, try activating ourselves first
-            if !success {
-                print("[Holster] Hide failed, trying alternate method...")
-                NSApp.activate(ignoringOtherApps: true)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    _ = app.hide()
-                }
+            NSApp.activate(ignoringOtherApps: true)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                app.hide()
             }
         } else {
             // Any other state - just open the app (fast, creates window if needed)
@@ -362,7 +381,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             NSWorkspace.shared.open(url)
         }
     }
-    
+
     private func launchApp() {
         let config = NSWorkspace.OpenConfiguration()
         config.activates = true

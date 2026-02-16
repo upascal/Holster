@@ -9,7 +9,8 @@ class AppSettings: ObservableObject {
     @AppStorage("targetBundleID") var targetBundleID: String = ""
     @AppStorage("targetAppPath") var targetAppPath: String = ""
     @AppStorage("targetAppName") var targetAppName: String = ""
-    
+    @AppStorage("launchAtLogin") var launchAtLogin: Bool = false
+
     /// Returns true if an app is configured
     var hasTargetApp: Bool {
         return !targetAppPath.isEmpty
